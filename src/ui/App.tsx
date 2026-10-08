@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ProjectsView } from './ProjectsView';
+import { SettingsView } from './SettingsView';
 import { TodayView } from './TodayView';
 import { useAppData } from './useAppData';
 import { useNow } from './useNow';
@@ -48,7 +49,7 @@ export function App() {
         {tab === 'today' && <TodayView store={store} now={now} onGoToProjects={() => setTab('projects')} />}
         {tab === 'week' && <WeekView store={store} now={now} />}
         {tab === 'projects' && <ProjectsView store={store} now={now} />}
-        {tab === 'settings' && <p className="muted">Settings come later.</p>}
+        {tab === 'settings' && <SettingsView store={store} />}
       </main>
     </div>
   );
