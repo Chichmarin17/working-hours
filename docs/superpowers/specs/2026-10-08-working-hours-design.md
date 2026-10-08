@@ -154,8 +154,10 @@ never treated as away; an away period is also clamped to start no earlier
 than the running entry.
 
 **Idle Detection (Chrome/Edge, opt-in).** An `IdleDetector` with a 60 s
-threshold. When it reports `userState: "idle"` or `screenState: "locked"`,
-the away start is recorded as `now - 60 s`. When it reports active and
+threshold. When it reports `userState: "idle"`, the away start is recorded
+as `now - 60 s` (idle fires after a minute without input); when it reports
+`screenState: "locked"` first, the away start is `now`, since a lock can
+happen right after typing. When it reports active and
 unlocked again, an away period `[awayStart, now]` is detected. This covers a
 locked screen while the Mac stays awake. If permission is denied, the toggle
 switches back off and shows a note.
