@@ -10,6 +10,11 @@ see daily and weekly totals, export/import JSON and CSV. Data stays in this brow
     npm test
     npm run build    # static site in dist/ (relative paths, any static host)
 
+## Deploy
+
+Every push to `main` runs the tests, builds, and publishes `dist/` to GitHub Pages
+(`.github/workflows/deploy.yml`): https://chichmarin17.github.io/working-hours/
+
 ## Notes
 
 - Data is per browser and per address: localhost and a deployed URL have separate data.
