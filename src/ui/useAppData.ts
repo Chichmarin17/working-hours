@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { AppData, Result } from '../domain/types';
-import { loadData, saveData, STORAGE_KEY } from '../storage/store';
+import { openStore, STORAGE_KEY } from '../storage/store';
 
 export type AppStore = {
   data: AppData;
@@ -12,46 +12,64 @@ export type AppStore = {
 };
 
 export function useAppData(): AppStore {
-  const [initial] = useState(() => loadData(window.localStorage, Date.now()));
-  const dataRef = useRef(initial.data);
-  const [data, setData] = useState(initial.data);
-  const [warning, setWarning] = useState(initial.warning);
+  const [{ store, warning: initialWarning }] = useState(() => openStore(window.localStorage, Date.now()));
+  const [data, setData] = useState(store.data());
+  const [warning, setWarning] = useState(initialWarning);
 
-  const commit = useCallback((next: AppData) => {
-    if (next === dataRef.current) return;
-    dataRef.current = next;
-    setData(next);
-    try {
-      saveData(window.localStorage, next);
-    } catch {
-      setWarning('Could not save to browser storage. Export a JSON backup to keep your data.');
-    }
-  }, []);
+  // Picks up writes from other tabs or hand edits, so a save never overwrites them.
+  const sync = useCallback(() => {
+    const result = store.refresh(Date.now());
+    if (result.warning) setWarning(result.warning);
+    if (result.changed) setData(store.data());
+  }, [store]);
 
-  const update = useCallback((change: (data: AppData) => AppData) => commit(change(dataRef.current)), [commit]);
+  const commit = useCallback(
+    (next: AppData) => {
+      if (next === store.data()) return;
+      setData(next);
+      try {
+        store.save(next);
+      } catch {
+        setWarning('Could not save to browser storage. Export a JSON backup to keep your data.');
+      }
+    },
+    [store],
+  );
+
+  const update = useCallback(
+    (change: (data: AppData) => AppData) => {
+      sync();
+      commit(change(store.data()));
+    },
+    [store, sync, commit],
+  );
 
   const tryUpdate = useCallback(
     (change: (data: AppData) => Result<AppData>) => {
-      const result = change(dataRef.current);
+      sync();
+      const result = change(store.data());
       if (!result.ok) return result.error;
       commit(result.value);
       return null;
     },
-    [commit],
+    [store, sync, commit],
   );
 
-  // Another tab changed the data: adopt it.
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY) return;
-      const loaded = loadData(window.localStorage, Date.now());
-      dataRef.current = loaded.data;
-      setData(loaded.data);
-      if (loaded.warning) setWarning(loaded.warning);
+      if (event.key === STORAGE_KEY) sync();
+    };
+    // A page restored from the back/forward cache may have missed storage events.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) sync();
     };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, [sync]);
 
   const dismissWarning = useCallback(() => setWarning(null), []);
 
