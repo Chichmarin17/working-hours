@@ -143,12 +143,15 @@ Single page, four tabs. Follows system light/dark mode.
 Active only while a timer is running.
 
 **Heartbeat (all browsers).** Every 30 s the page sets `lastSeen = now`.
-On each tick, and on page load, if a timer is running and
-`now - lastSeen ≥ threshold`, an away period `[lastSeen, now]` is detected.
-JS timers freeze while the Mac sleeps or the lid is closed, and nothing runs
-while the browser is closed, so the jump reveals the gap. (Chrome throttles
-background tabs to about one tick per minute; the threshold is ≥ 1 min, so
-this is fine.)
+On each tick, on page load, and when the tab becomes visible or focused, if
+a timer is running and `now - lastSeen ≥ max(threshold, 2 min)`, an away
+period `[lastSeen, now]` is detected. JS timers freeze while the Mac sleeps
+or the lid is closed, and nothing runs while the browser is closed, so the
+jump reveals the gap. The 2-minute floor exists because Chrome throttles
+background tabs to about one tick per minute, which must not look like an
+absence. Starting a timer sets `lastSeen = now`, so time before the start is
+never treated as away; an away period is also clamped to start no earlier
+than the running entry.
 
 **Idle Detection (Chrome/Edge, opt-in).** An `IdleDetector` with a 60 s
 threshold. When it reports `userState: "idle"` or `screenState: "locked"`,
@@ -176,19 +179,28 @@ running entry was stopped or deleted in the meantime, the pending away period
 is dropped.
 
 **Known limits:** the page must stay open (a background tab is fine) for the
-idle signal; Safari/Firefox only get the heartbeat signal.
+idle signal; Safari/Firefox only get the heartbeat signal. If the browser
+discards the tab to save memory (Chrome Memory Saver) or throttles it for
+longer than the threshold, the reload/next tick can raise a false away
+prompt; "Keep as work" resolves it, and the site can be excluded from Memory
+Saver.
+
+Multiple open tabs stay in sync through the `storage` event.
 
 ## Code structure
 
 ```
 src/
   domain/          pure functions, no React, no localStorage; time passed in
+    types.ts       AppData types, defaults, Result helper
     time.ts        duration math, h:mm formatting, local day/week ranges, day clipping
     entries.ts     start/stop/switch, add/edit/delete validation, overlap check, tiny-entry rule
+    entryForm.ts   form values (date, start, end-or-duration) ↔ entry draft
     projects.ts    add/rename/recolor/archive validation
     totals.ts      per-day and per-project totals, week grid
     away.ts        detect away period from (lastSeen, now, threshold); merge pending; resolve actions
     backup.ts      AppData validation for import, JSON export, CSV export
+    appActions.ts  every user action as AppData → AppData (composes the modules above)
   storage/
     store.ts       load/save AppData to localStorage, corrupt-data handling
   ui/
