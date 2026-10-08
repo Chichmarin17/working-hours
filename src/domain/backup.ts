@@ -103,5 +103,6 @@ export function toCsv(data: AppData): string {
         e.source,
       ];
     });
-  return [CSV_HEADER, ...rows].map((row) => row.map(csvField).join(',')).join('\n') + '\n';
+  // The BOM makes Excel read the file as UTF-8, so non-Latin notes stay readable.
+  return '﻿' + [CSV_HEADER, ...rows].map((row) => row.map(csvField).join(',')).join('\n') + '\n';
 }

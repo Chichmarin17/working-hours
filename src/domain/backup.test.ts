@@ -62,7 +62,8 @@ describe('parseAppData', () => {
 describe('toCsv', () => {
   it('exports finished entries in local time and escapes notes', () => {
     expect(toCsv(valid())).toBe(
-      'date,project,start,end,duration_minutes,note,source\n' +
+      '﻿' + // BOM so Excel reads non-Latin text (e.g. Cyrillic) as UTF-8
+        'date,project,start,end,duration_minutes,note,source\n' +
         '2026-10-08,job1,2026-10-08 09:00,2026-10-08 10:00,60,"a, ""quoted""\nnote",manual\n',
     );
   });
