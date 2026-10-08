@@ -3,6 +3,7 @@ import { ProjectsView } from './ProjectsView';
 import { TodayView } from './TodayView';
 import { useAppData } from './useAppData';
 import { useNow } from './useNow';
+import { WeekView } from './WeekView';
 
 const TABS = [
   { id: 'today', label: 'Today' },
@@ -45,7 +46,7 @@ export function App() {
       )}
       <main>
         {tab === 'today' && <TodayView store={store} now={now} onGoToProjects={() => setTab('projects')} />}
-        {tab === 'week' && <p className="muted">Week view comes later.</p>}
+        {tab === 'week' && <WeekView store={store} now={now} />}
         {tab === 'projects' && <ProjectsView store={store} now={now} />}
         {tab === 'settings' && <p className="muted">Settings come later.</p>}
       </main>
