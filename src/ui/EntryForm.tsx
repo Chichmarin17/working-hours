@@ -47,20 +47,20 @@ export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Prop
           <input type="date" value={values.date} onChange={set('date')} required />
         </label>
         <label>
-          Start
-          <input type="time" value={values.startTime} onChange={set('startTime')} required />
-        </label>
-        <label>
-          End
-          <input type="time" value={values.endTime} onChange={set('endTime')} />
-        </label>
-        <label>
-          or duration (h:mm)
+          Duration (h:mm)
           <input value={values.duration} onChange={set('duration')} placeholder="1:30" />
         </label>
         <label className="wide">
           Note
           <input value={values.note} onChange={set('note')} />
+        </label>
+        <label>
+          Start (optional)
+          <input type="time" value={values.startTime} onChange={set('startTime')} />
+        </label>
+        <label>
+          End (optional)
+          <input type="time" value={values.endTime} onChange={set('endTime')} />
         </label>
       </div>
       {error && (

@@ -41,8 +41,23 @@ describe('draftFromForm', () => {
     expect(result.ok && result.value.end).toBe(at(2026, 10, 8, 10));
   });
 
+  it('a duration without times gives an untimed entry starting at local midnight', () => {
+    expect(draftFromForm({ ...base, startTime: '', duration: '1:30' })).toEqual({
+      ok: true,
+      value: { projectId: 'p1', start: at(2026, 10, 8), end: at(2026, 10, 8, 1, 30), note: 'n', untimed: true },
+    });
+  });
+
+  it('rejects an end time without a start time', () => {
+    expect(draftFromForm({ ...base, startTime: '', endTime: '10:00', duration: '1:00' })).toEqual({
+      ok: false,
+      error: 'Enter a start time too, or leave both times empty.',
+    });
+  });
+
   it('reports missing or invalid values', () => {
-    expect(draftFromForm({ ...base, startTime: '' })).toEqual({ ok: false, error: 'Enter a valid date and start time.' });
+    expect(draftFromForm({ ...base, startTime: '' })).toEqual({ ok: false, error: 'Enter a duration (h:mm).' });
+    expect(draftFromForm({ ...base, date: '', duration: '1:00' })).toEqual({ ok: false, error: 'Enter a valid date.' });
     expect(draftFromForm(base)).toEqual({ ok: false, error: 'Enter an end time or a duration.' });
     expect(draftFromForm({ ...base, duration: '90' })).toEqual({
       ok: false,
@@ -77,6 +92,25 @@ describe('formFromEntry', () => {
     expect(draftFromForm(values)).toEqual({
       ok: true,
       value: { projectId: 'p1', start: at(2026, 10, 8, 23), end: at(2026, 10, 9, 1), note: 'late' },
+    });
+  });
+});
+
+describe('formFromEntry for an untimed entry', () => {
+  it('fills the duration and leaves the times empty', () => {
+    const entry: Entry = {
+      id: 'u',
+      projectId: 'p1',
+      start: toIso(at(2026, 10, 8)),
+      end: toIso(at(2026, 10, 8, 2, 15)),
+      untimed: true,
+      source: 'manual',
+    };
+    const values = formFromEntry(entry);
+    expect(values).toEqual({ projectId: 'p1', date: '2026-10-08', startTime: '', endTime: '', duration: '2:15', note: '' });
+    expect(draftFromForm(values)).toEqual({
+      ok: true,
+      value: { projectId: 'p1', start: at(2026, 10, 8), end: at(2026, 10, 8, 2, 15), note: '', untimed: true },
     });
   });
 });

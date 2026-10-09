@@ -160,6 +160,49 @@ describe('saveEntry', () => {
   });
 });
 
+describe('saveEntry with an untimed (duration-only) draft', () => {
+  const day = new Date(2026, 9, 8).getTime(); // local midnight; T0 is 09:00 that day
+  const untimed = (hours: number, projectId = 'p1') => ({ projectId, start: day, end: day + hours * HOUR, note: '', untimed: true });
+
+  it('stores the untimed flag', () => {
+    expect(saveEntry([], projects, untimed(1.5), T0, ids())).toEqual({
+      ok: true,
+      value: [{ id: 'id1', projectId: 'p1', start: toIso(day), end: toIso(day + 1.5 * HOUR), untimed: true, source: 'manual' }],
+    });
+  });
+
+  it('never clashes with timed entries, in either direction', () => {
+    const early = [done('a', 'p2', day, day + HOUR)];
+    expect(saveEntry(early, projects, untimed(3), T0 + 10 * HOUR, ids()).ok).toBe(true);
+    const withUntimed: Entry[] = [{ ...done('u', 'p1', day, day + 3 * HOUR), untimed: true }];
+    expect(saveEntry(withUntimed, projects, { projectId: 'p2', start: day + HOUR, end: day + 2 * HOUR, note: '' }, T0, ids()).ok).toBe(true);
+  });
+
+  it('accepts today even when the duration reaches past now, but not a future date', () => {
+    expect(saveEntry([], projects, untimed(12), T0, ids()).ok).toBe(true); // 12 h today, at 09:00
+    expect(saveEntry([], projects, { ...untimed(1), start: day + 24 * HOUR, end: day + 25 * HOUR }, T0, ids())).toEqual({
+      ok: false,
+      error: "The date can't be in the future.",
+    });
+  });
+
+  it('rejects more than 24 hours', () => {
+    expect(saveEntry([], projects, untimed(25), T0, ids())).toEqual({
+      ok: false,
+      error: "An entry can't be longer than 24 hours.",
+    });
+  });
+
+  it('editing switches between timed and untimed', () => {
+    const timed = [done('a', 'p1', T0 - HOUR, T0 - 30 * MINUTE)];
+    const toUntimed = saveEntry(timed, projects, untimed(2), T0, ids(), 'a');
+    expect(toUntimed.ok && toUntimed.value[0].untimed).toBe(true);
+    if (!toUntimed.ok) return;
+    const back = saveEntry(toUntimed.value, projects, { projectId: 'p1', start: T0 - HOUR, end: T0, note: '' }, T0, ids(), 'a');
+    expect(back.ok && 'untimed' in back.value[0]).toBe(false);
+  });
+});
+
 describe('deleteEntry', () => {
   it('removes a finished entry but never the running one', () => {
     const running: Entry = { id: 'r', projectId: 'p1', start: toIso(T0 + 2 * HOUR), end: null, source: 'timer' };
