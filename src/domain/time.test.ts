@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays,
   dayKey,
+  formatEntryDuration,
   formatHM,
   formatHMS,
   HOUR,
@@ -32,6 +33,15 @@ describe('formatHMS', () => {
   it('formats hours, minutes and seconds', () => {
     expect(formatHMS(HOUR + 24 * MINUTE + 5_000)).toBe('1:24:05');
     expect(formatHMS(-1)).toBe('0:00:00');
+  });
+});
+
+describe('formatEntryDuration', () => {
+  it('shows seconds under a minute and h:mm from a minute on', () => {
+    expect(formatEntryDuration(42_000)).toBe('42s');
+    expect(formatEntryDuration(999)).toBe('0s');
+    expect(formatEntryDuration(MINUTE)).toBe('0:01');
+    expect(formatEntryDuration(HOUR + 5 * MINUTE)).toBe('1:05');
   });
 });
 

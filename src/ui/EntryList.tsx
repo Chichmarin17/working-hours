@@ -1,5 +1,5 @@
 import { entryEndMs } from '../domain/entries';
-import { dayKey, formatHM, timeOfDay, toMs } from '../domain/time';
+import { dayKey, formatEntryDuration, timeOfDay, toMs } from '../domain/time';
 import type { Entry, Project } from '../domain/types';
 
 type Props = {
@@ -34,7 +34,7 @@ export function EntryList({ entries, projects, now, onEdit, onDelete }: Props) {
               {entry.note && <div className="entry-note">{entry.note}</div>}
             </div>
             <div className="entry-side">
-              <span>{formatHM(end - start)}</span>
+              <span>{formatEntryDuration(end - start)}</span>
               {!running && (
                 <>
                   <button type="button" onClick={() => onEdit(entry)}>

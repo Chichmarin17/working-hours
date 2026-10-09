@@ -92,9 +92,10 @@ describe('resolveAway', () => {
     ]);
   });
 
-  it('discard drops a cut entry shorter than a minute', () => {
+  it('discard keeps a cut entry shorter than a minute', () => {
     const early: PendingAway = { entryId: 'r', from: toIso(T0 + 30_000), to: toIso(T0 + HOUR) };
     expect(resolveAway([running], early, 'discard', ids())).toEqual([
+      { ...running, end: toIso(T0 + 30_000) },
       { id: 'id1', projectId: 'p1', start: toIso(T0 + HOUR), end: null, note: 'focus', source: 'timer' },
     ]);
   });

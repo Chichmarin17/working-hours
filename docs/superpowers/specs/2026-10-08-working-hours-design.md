@@ -80,8 +80,10 @@ JSON is never silently discarded: the raw string is kept under
    a new running entry for P starting now (source `timer`). Starting the
    project that is already running does nothing.
 3. **Stop:** set `end` to now.
-4. **Tiny entries:** when a timer entry is stopped and lasts under 60 s, it is
-   deleted instead of saved.
+4. **Short entries are kept.** A timer entry is saved however short it is
+   (stop, switch, or an away cut). Only a zero-length entry (end = start) is
+   dropped, since it records nothing. The entry list shows durations under a
+   minute in seconds (`42s`); totals stay `h:mm`.
 5. **No overlaps.** Adding or editing an entry so that `[start, end)`
    intersects another entry's interval (a running entry's interval extends to
    now) is rejected with an error naming the clashing entry (project, time
@@ -175,7 +177,7 @@ the same entry, its `to` is extended to the new end, keeping the earliest
   new running entry for the same project and note starting at `to`.
 - **Stop timer at `from`:** set the running entry's `end = from`.
 
-The tiny-entry rule (under 60 s) applies to the entry cut at `from`.
+The entry cut at `from` is kept however short (only a zero-length cut is dropped).
 `pendingAway` is persisted, so the dialog reappears after a reload. If the
 running entry was stopped or deleted in the meantime, the pending away period
 is dropped.
@@ -196,7 +198,7 @@ src/
   domain/          pure functions, no React, no localStorage; time passed in
     types.ts       AppData types, defaults, Result helper
     time.ts        duration math, h:mm formatting, local day/week ranges, day clipping
-    entries.ts     start/stop/switch, add/edit/delete validation, overlap check, tiny-entry rule
+    entries.ts     start/stop/switch, add/edit/delete validation, overlap check, short entries
     entryForm.ts   form values (date, start, end-or-duration) ↔ entry draft
     projects.ts    add/rename/recolor/archive validation
     totals.ts      per-day and per-project totals, week grid
@@ -220,7 +222,7 @@ inside), which makes them deterministic in tests.
 
 - Domain modules written test-first with Vitest: overlap edge cases
   (touching boundaries, running entry), midnight split, week boundaries,
-  tiny-entry rule, switching projects, away detection and all three
+  short and zero-length entries, switching projects, away detection and all three
   resolutions, pending-away merge, import validation, CSV escaping.
 - `store.ts` tested against a fake `localStorage` (including corrupt data).
 - UI checked by hand in the browser: timer start/stop/switch, manual
