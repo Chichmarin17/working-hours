@@ -18,12 +18,21 @@ function parseProject(p: unknown): Project | null {
 
 function parseEntry(e: unknown): Entry | null {
   if (!isObj(e)) return null;
-  const { id, projectId, start, end, note, source } = e;
+  const { id, projectId, start, end, note, source, untimed } = e;
   if (typeof id !== 'string' || typeof projectId !== 'string' || !isIso(start)) return null;
   if (!(end === null || isIso(end))) return null;
   if (source !== 'timer' && source !== 'manual') return null;
   if (note !== undefined && typeof note !== 'string') return null;
-  return { id, projectId, start, end, source: source as EntrySource, ...(note ? { note } : {}) };
+  if (untimed !== undefined && typeof untimed !== 'boolean') return null;
+  return {
+    id,
+    projectId,
+    start,
+    end,
+    source: source as EntrySource,
+    ...(note ? { note } : {}),
+    ...(untimed ? { untimed: true as const } : {}),
+  };
 }
 
 function parseSettings(s: unknown): Settings | null {
@@ -96,8 +105,8 @@ export function toCsv(data: AppData): string {
       return [
         dayKey(start),
         names.get(e.projectId) ?? '',
-        localStamp(start),
-        localStamp(end),
+        e.untimed ? '' : localStamp(start),
+        e.untimed ? '' : localStamp(end),
         String(Math.round((end - start) / MINUTE)),
         e.note ?? '',
         e.source,

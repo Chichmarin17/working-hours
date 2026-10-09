@@ -27,10 +27,12 @@ export function EntryList({ entries, projects, now, onEdit, onDelete }: Props) {
             <div className="entry-main">
               <span className="dot" style={{ background: project?.color ?? 'gray' }} />
               <strong>{project?.name ?? 'Unknown project'}</strong>{' '}
-              <span className="muted">
-                {timeOfDay(start)}–{running ? 'now' : timeOfDay(end)}
-                {nextDay ? ' (+1 day)' : ''}
-              </span>
+              {!entry.untimed && (
+                <span className="muted entry-times">
+                  {timeOfDay(start)}–{running ? 'now' : timeOfDay(end)}
+                  {nextDay ? ' (+1 day)' : ''}
+                </span>
+              )}
               {entry.note && <div className="entry-note">{entry.note}</div>}
             </div>
             <div className="entry-side">

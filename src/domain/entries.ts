@@ -4,7 +4,8 @@ import { err, ok } from './types';
 
 export const MAX_ENTRY_MS = 24 * HOUR;
 
-export type EntryDraft = { projectId: string; start: number; end: number; note: string };
+/** `untimed`: duration-only, with `start` at local midnight of its date. */
+export type EntryDraft = { projectId: string; start: number; end: number; note: string; untimed?: boolean };
 
 export function runningEntry(entries: Entry[]): Entry | undefined {
   return entries.find((e) => e.end === null);
@@ -53,8 +54,18 @@ export function describeEntry(entry: Entry, projects: Project[]): string {
   return `${name}, ${dayKey(start)} ${timeOfDay(start)}–${end}`;
 }
 
+/** Untimed entries have no real times, so they never clash with anything. */
 function findOverlap(entries: Entry[], start: number, end: number, now: number, ignoreId?: string): Entry | undefined {
-  return entries.find((e) => e.id !== ignoreId && overlapMs(start, end, toMs(e.start), entryEndMs(e, now)) > 0);
+  return entries.find(
+    (e) => e.id !== ignoreId && !e.untimed && overlapMs(start, end, toMs(e.start), entryEndMs(e, now)) > 0,
+  );
+}
+
+function withUntimed(entry: Entry, untimed: boolean): Entry {
+  const copy: Entry = { ...entry };
+  if (untimed) copy.untimed = true;
+  else delete copy.untimed;
+  return copy;
 }
 
 /** Adds a manual entry, or updates `editingId`, after validating the draft. */
@@ -70,19 +81,21 @@ export function saveEntry(
   const existing = editingId === undefined ? undefined : entries.find((e) => e.id === editingId);
   if (editingId !== undefined && !existing) return err('This entry no longer exists.');
   if (existing?.end === null) return err('Stop the timer before editing this entry.');
+  const untimed = draft.untimed === true;
   if (!(draft.end > draft.start)) return err('End must be after start.');
-  if (draft.end > now) return err("End can't be in the future.");
   if (draft.end - draft.start > MAX_ENTRY_MS) return err("An entry can't be longer than 24 hours.");
-  const clash = findOverlap(entries, draft.start, draft.end, now, editingId);
+  if (untimed && draft.start > now) return err("The date can't be in the future.");
+  if (!untimed && draft.end > now) return err("End can't be in the future.");
+  const clash = untimed ? undefined : findOverlap(entries, draft.start, draft.end, now, editingId);
   if (clash) return err(`Overlaps with ${describeEntry(clash, projects)}.`);
 
   const fields = { projectId: draft.projectId, start: toIso(draft.start), end: toIso(draft.end) };
   const note = draft.note.trim();
   if (existing) {
-    const updated = withNote({ ...existing, ...fields }, note);
+    const updated = withUntimed(withNote({ ...existing, ...fields }, note), untimed);
     return ok(entries.map((e) => (e.id === existing.id ? updated : e)));
   }
-  return ok([...entries, withNote({ id: newId(), ...fields, source: 'manual' }, note)]);
+  return ok([...entries, withUntimed(withNote({ id: newId(), ...fields, source: 'manual' }, note), untimed)]);
 }
 
 export function deleteEntry(entries: Entry[], entryId: string): Entry[] {

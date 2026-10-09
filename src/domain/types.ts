@@ -13,6 +13,8 @@ export type Entry = {
   start: string; // ISO 8601 (UTC)
   end: string | null; // null = running timer
   note?: string;
+  /** Duration-only entry: no real times; stored from local midnight of its date. */
+  untimed?: true;
   source: EntrySource;
 };
 

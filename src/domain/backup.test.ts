@@ -41,6 +41,16 @@ describe('parseAppData', () => {
     expect(result.ok && result.value.pendingAway).toBeNull();
   });
 
+  it('keeps the untimed flag through a JSON round trip and rejects a non-boolean one', () => {
+    const data = valid();
+    data.entries[0] = { ...data.entries[0], untimed: true };
+    expect(parseAppData(JSON.parse(toJson(data)))).toEqual({ ok: true, value: data });
+    expect(parseAppData({ ...valid(), entries: [{ ...valid().entries[0], untimed: 'yes' }] })).toEqual({
+      ok: false,
+      error: 'entries[0] is invalid.',
+    });
+  });
+
   const e1 = valid().entries[0];
   const e2 = valid().entries[1];
   it.each([
@@ -66,6 +76,12 @@ describe('toCsv', () => {
         'date,project,start,end,duration_minutes,note,source\n' +
         '2026-10-08,job1,2026-10-08 09:00,2026-10-08 10:00,60,"a, ""quoted""\nnote",manual\n',
     );
+  });
+
+  it('leaves start and end empty for untimed entries', () => {
+    const data = valid();
+    data.entries[0] = { ...data.entries[0], untimed: true, note: 'x' };
+    expect(toCsv(data).split('\n')[1]).toBe('2026-10-08,job1,,,60,x,manual');
   });
 
   it('escapes project names too', () => {

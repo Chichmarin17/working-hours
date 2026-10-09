@@ -44,6 +44,7 @@ type Entry = {
   start: string;       // ISO 8601 timestamp (UTC)
   end: string | null;  // null = running timer
   note?: string;
+  untimed?: true;      // duration-only entry: start = local midnight of its date
   source: "timer" | "manual";
 };
 
@@ -89,10 +90,15 @@ JSON is never silently discarded: the raw string is kept under
    now) is rejected with an error naming the clashing entry (project, time
    range). Touching boundaries (one ends at 14:00, next starts at 14:00) is
    allowed.
-6. **Validation for manual entries:** project required; `end > start`;
-   `end` not in the future; duration ≤ 24 h. The form accepts either an end
-   time or a duration (`h:mm`); an end time earlier than the start time on the
-   same date means the next day.
+6. **Manual entries — what matters is the duration per project.** The form
+   needs project, date and duration (`h:mm`); start and end times are
+   optional and come last. Without a start time the entry is *untimed*: it
+   counts fully toward its date and project, shows no time range, and is never
+   checked for overlaps. With a start time it is timed as before: either an
+   end time or a duration; an end time earlier than the start means the next
+   day; `end` not in the future; no overlaps. An end time without a start time
+   is an error. All entries: duration > 0 and ≤ 24 h; an untimed entry's date
+   can't be in the future.
 7. **Day split.** Totals per day clip each entry to that day's local
    midnight boundaries (23:00–01:00 adds 1 h to each day). Weeks run
    Monday–Sunday in local time.
@@ -115,8 +121,10 @@ Single page, four tabs. Follows system light/dark mode.
   appears at the top with a live duration and can't be deleted (stop it
   first).
 - Totals: today overall and per project.
-- "+ Add entry" opens the entry form (project, date, start, end-or-duration,
-  note). The same form is used for editing.
+- "+ Add entry" opens the entry form (project, date, duration, note, then
+  optional start and end). The same form is used for editing. Time ranges in
+  the list are shown smaller than project and duration; untimed entries have
+  none.
 
 **Week**
 - Grid: rows = projects that have time in the week, columns = Mon–Sun, row
@@ -136,7 +144,7 @@ Single page, four tabs. Follows system light/dark mode.
   `AppData`).
 - Export CSV: `working-hours-YYYY-MM-DD.csv` with columns
   `date,project,start,end,duration_minutes,note,source` (local time,
-  finished entries only).
+  finished entries only; start/end empty for untimed entries).
 - Import JSON: validates the file; if valid, asks for confirmation, then
   replaces all data. If invalid, shows what is wrong and changes nothing.
 

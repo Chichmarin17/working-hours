@@ -70,6 +70,7 @@ input, select { background: var(--surface); border: 1px solid var(--border); bor
 .entry { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--border); }
 .entry-main { min-width: 0; }
 .entry-note { color: var(--muted); overflow-wrap: anywhere; }
+.entry-times { font-size: 0.85em; }
 .entry-side { display: flex; gap: 6px; align-items: center; justify-content: flex-end; font-variant-numeric: tabular-nums; }
 
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
