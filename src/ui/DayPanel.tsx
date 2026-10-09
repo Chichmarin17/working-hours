@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { deleteEntryAction, saveEntryAction } from '../domain/appActions';
 import { draftFromForm, emptyForm, type EntryFormValues, formFromEntry } from '../domain/entryForm';
 import { currentProjectId } from '../domain/projects';
@@ -10,10 +10,20 @@ import { EntryList } from './EntryList';
 import { newId } from './newId';
 import type { AppStore } from './useAppData';
 
-type Props = { store: AppStore; now: number; dayStart: number; title: string };
+type Props = {
+  store: AppStore;
+  now: number;
+  dayStart: number;
+  title: string;
+  /** Key shown on the Add button, e.g. "A". */
+  shortcut?: string;
+  /** Set when the keyboard shortcut asks for the Add form; cleared through onAddOpened. */
+  addRequested?: boolean;
+  onAddOpened?: () => void;
+};
 type Editing = { entryId?: string; values: EntryFormValues };
 
-export function DayPanel({ store, now, dayStart, title }: Props) {
+export function DayPanel({ store, now, dayStart, title, shortcut, addRequested, onAddOpened }: Props) {
   const { data } = store;
   const [editing, setEditing] = useState<Editing | null>(null);
   const dayEnd = addDays(dayStart, 1);
@@ -21,6 +31,12 @@ export function DayPanel({ store, now, dayStart, title }: Props) {
   const byProject = totalsByProject(data.entries, dayStart, dayEnd, now);
   const projectsById = new Map(data.projects.map((p) => [p.id, p]));
   const defaultProject = currentProjectId(data.projects, data.entries);
+
+  useEffect(() => {
+    if (!addRequested) return;
+    setEditing((current) => current ?? { values: emptyForm(defaultProject, dayStart) });
+    onAddOpened?.();
+  }, [addRequested]);
 
   const submit = (values: EntryFormValues) => {
     const draft = draftFromForm(values);
@@ -41,7 +57,7 @@ export function DayPanel({ store, now, dayStart, title }: Props) {
           {title} · {formatHM(totalMs(data.entries, dayStart, dayEnd, now))}
         </h2>
         <button type="button" onClick={() => setEditing({ values: emptyForm(defaultProject, dayStart) })}>
-          + Add entry
+          + Add entry{shortcut ? ` (${shortcut})` : ''}
         </button>
       </div>
       {Object.keys(byProject).length > 0 && (
