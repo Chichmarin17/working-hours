@@ -12,6 +12,11 @@ export function formatHM(ms: number): string {
   return `${Math.floor(totalMinutes / 60)}:${pad(totalMinutes % 60)}`;
 }
 
+/** Like formatHM, but shows entries under a minute in seconds ("42s") so they don't look empty. */
+export function formatEntryDuration(ms: number): string {
+  return ms < MINUTE ? `${Math.floor(Math.max(0, ms) / SECOND)}s` : formatHM(ms);
+}
+
 export function formatHMS(ms: number): string {
   const totalSeconds = Math.floor(Math.max(0, ms) / SECOND);
   const h = Math.floor(totalSeconds / 3600);

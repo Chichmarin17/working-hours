@@ -52,9 +52,23 @@ describe('timer', () => {
     expect(stopTimer(entries, T0 + 2 * HOUR)).toBe(entries);
   });
 
-  it('drops timer entries shorter than one minute and keeps one of exactly a minute', () => {
-    expect(stopTimer(startTimer([], 'p1', T0, ids()), T0 + 59_000)).toEqual([]);
-    expect(stopTimer(startTimer([], 'p1', T0, ids()), T0 + MINUTE)).toHaveLength(1);
+  it('keeps timer entries shorter than a minute', () => {
+    expect(stopTimer(startTimer([], 'p1', T0, ids()), T0 + 5_000)).toEqual([
+      { id: 'id1', projectId: 'p1', start: toIso(T0), end: toIso(T0 + 5_000), source: 'timer' },
+    ]);
+  });
+
+  it('keeps a short entry when switching projects quickly', () => {
+    const newId = ids();
+    const entries = startTimer(startTimer([], 'p1', T0, newId), 'p2', T0 + 10_000, newId);
+    expect(entries.map((e) => [e.projectId, e.end])).toEqual([
+      ['p1', toIso(T0 + 10_000)],
+      ['p2', null],
+    ]);
+  });
+
+  it('drops only a zero-length entry, which has nothing to record', () => {
+    expect(stopTimer(startTimer([], 'p1', T0, ids()), T0)).toEqual([]);
   });
 
   it('setNote stores the note as typed and removes an empty one', () => {

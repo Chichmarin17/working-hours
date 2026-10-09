@@ -1,8 +1,7 @@
-import { dayKey, HOUR, MINUTE, overlapMs, timeOfDay, toIso, toMs } from './time';
+import { dayKey, HOUR, overlapMs, timeOfDay, toIso, toMs } from './time';
 import type { Entry, Project, Result } from './types';
 import { err, ok } from './types';
 
-export const TINY_MS = MINUTE;
 export const MAX_ENTRY_MS = 24 * HOUR;
 
 export type EntryDraft = { projectId: string; start: number; end: number; note: string };
@@ -15,11 +14,11 @@ export function entryEndMs(entry: Entry, now: number): number {
   return entry.end === null ? now : toMs(entry.end);
 }
 
-/** Sets an entry's end; timer entries shorter than TINY_MS are removed instead. */
+/** Sets an entry's end, however short; a zero-length entry has nothing to record and is removed. */
 export function closeEntry(entries: Entry[], entryId: string, endMs: number): Entry[] {
   return entries.flatMap((e) => {
     if (e.id !== entryId) return [e];
-    if (e.source === 'timer' && endMs - toMs(e.start) < TINY_MS) return [];
+    if (endMs <= toMs(e.start)) return [];
     return [{ ...e, end: toIso(endMs) }];
   });
 }
