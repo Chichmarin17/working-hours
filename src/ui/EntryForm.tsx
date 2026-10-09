@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useState } from 'react';
+import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react';
 import type { EntryFormValues } from '../domain/entryForm';
 import type { Project } from '../domain/types';
 
@@ -14,7 +14,16 @@ type Props = {
 export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Props) {
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const projectRef = useRef<HTMLSelectElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const durationRef = useRef<HTMLInputElement>(null);
   const choices = projects.filter((p) => !p.archived || p.id === initial.projectId);
+
+  // Put the cursor in the first empty required field (usually Minutes), so typing + Enter saves.
+  useEffect(() => {
+    const first = [projectRef.current, dateRef.current, durationRef.current].find((el) => el && !el.value);
+    (first ?? durationRef.current)?.focus();
+  }, []);
 
   const set = (key: keyof EntryFormValues) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setValues((v) => ({ ...v, [key]: event.target.value }));
@@ -28,9 +37,9 @@ export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Prop
     <form className="panel" onSubmit={submit} aria-label={title}>
       <h2>{title}</h2>
       <div className="form-grid">
-        <label>
+        <label className="field-main">
           Project
-          <select value={values.projectId} onChange={set('projectId')} required>
+          <select ref={projectRef} value={values.projectId} onChange={set('projectId')} required>
             <option value="" disabled>
               Choose…
             </option>
@@ -42,23 +51,30 @@ export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Prop
             ))}
           </select>
         </label>
-        <label>
+        <label className="field-main">
           Date
-          <input type="date" value={values.date} onChange={set('date')} required />
+          <input ref={dateRef} type="date" value={values.date} onChange={set('date')} required />
         </label>
-        <label>
-          Duration (h:mm)
-          <input value={values.duration} onChange={set('duration')} placeholder="1:30" />
+        <label className="field-main">
+          Minutes
+          <input
+            ref={durationRef}
+            value={values.duration}
+            onChange={set('duration')}
+            placeholder="15"
+            inputMode="numeric"
+            autoComplete="off"
+          />
         </label>
-        <label className="wide">
-          Note
+        <label className="wide field-optional">
+          Note (optional)
           <input value={values.note} onChange={set('note')} />
         </label>
-        <label>
+        <label className="field-optional">
           Start (optional)
           <input type="time" value={values.startTime} onChange={set('startTime')} />
         </label>
-        <label>
+        <label className="field-optional">
           End (optional)
           <input type="time" value={values.endTime} onChange={set('endTime')} />
         </label>
@@ -69,7 +85,7 @@ export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Prop
         </p>
       )}
       <div className="row">
-        <button type="submit" className="primary">
+        <button type="submit" className="primary big">
           Save
         </button>
         <button type="button" onClick={onCancel}>

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { deleteEntryAction, saveEntryAction } from '../domain/appActions';
-import { runningEntry } from '../domain/entries';
 import { draftFromForm, emptyForm, type EntryFormValues, formFromEntry } from '../domain/entryForm';
-import { activeProjects } from '../domain/projects';
+import { currentProjectId } from '../domain/projects';
 import { addDays, formatHM } from '../domain/time';
 import { entriesInRange, totalMs, totalsByProject } from '../domain/totals';
 import type { Entry } from '../domain/types';
@@ -21,7 +20,7 @@ export function DayPanel({ store, now, dayStart, title }: Props) {
   const entries = entriesInRange(data.entries, dayStart, dayEnd, now);
   const byProject = totalsByProject(data.entries, dayStart, dayEnd, now);
   const projectsById = new Map(data.projects.map((p) => [p.id, p]));
-  const defaultProject = runningEntry(data.entries)?.projectId ?? activeProjects(data.projects)[0]?.id ?? '';
+  const defaultProject = currentProjectId(data.projects, data.entries);
 
   const submit = (values: EntryFormValues) => {
     const draft = draftFromForm(values);

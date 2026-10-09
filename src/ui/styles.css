@@ -76,6 +76,11 @@ input, select { background: var(--surface); border: 1px solid var(--border); bor
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
 .form-grid label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
 .form-grid .wide { grid-column: 1 / -1; }
+.form-grid .field-main { color: var(--text); font-weight: 600; font-size: 1rem; }
+.form-grid .field-main input, .form-grid .field-main select { font-size: 1.15rem; font-weight: 400; padding: 10px 12px; border-width: 2px; }
+.form-grid .field-main input:focus, .form-grid .field-main select:focus { outline: none; border-color: var(--accent); }
+.form-grid .field-optional { font-size: 0.8rem; }
+.form-grid .field-optional input { font-size: 0.9rem; padding: 4px 6px; }
 
 .table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }

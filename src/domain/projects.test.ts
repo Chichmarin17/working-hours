@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { activeProjects, addProject, PALETTE, renameProject, setArchived, setProjectColor } from './projects';
-import type { Project } from './types';
+import { activeProjects, addProject, currentProjectId, PALETTE, renameProject, setArchived, setProjectColor } from './projects';
+import type { Entry, Project } from './types';
 
 const ids = () => {
   let n = 0;
@@ -64,5 +64,32 @@ describe('archiving', () => {
 describe('setProjectColor', () => {
   it('changes the color', () => {
     expect(setProjectColor([job1], 'a', PALETTE[3])).toEqual([{ ...job1, color: PALETTE[3] }]);
+  });
+});
+
+describe('currentProjectId', () => {
+  const p2: Project = { ...job1, id: 'c', name: 'job2' };
+  const entry = (id: string, projectId: string, start: string, end: string | null): Entry => ({
+    id,
+    projectId,
+    start,
+    end,
+    source: 'timer',
+  });
+
+  it("prefers the running timer's project", () => {
+    const entries = [entry('x', 'c', '2026-10-08T07:00:00Z', null), entry('y', 'a', '2026-10-08T08:00:00Z', '2026-10-08T09:00:00Z')];
+    expect(currentProjectId([job1, p2], entries)).toBe('c');
+  });
+
+  it('otherwise uses the project of the latest entry', () => {
+    const entries = [entry('y', 'c', '2026-10-08T08:00:00Z', '2026-10-08T09:00:00Z'), entry('x', 'a', '2026-10-07T07:00:00Z', '2026-10-07T08:00:00Z')];
+    expect(currentProjectId([job1, p2], entries)).toBe('c');
+  });
+
+  it('skips archived projects and falls back to the first active one', () => {
+    const entries = [entry('y', 'b', '2026-10-08T08:00:00Z', '2026-10-08T09:00:00Z')];
+    expect(currentProjectId([old, job1], entries)).toBe('a');
+    expect(currentProjectId([old], [])).toBe('');
   });
 });

@@ -91,8 +91,11 @@ JSON is never silently discarded: the raw string is kept under
    range). Touching boundaries (one ends at 14:00, next starts at 14:00) is
    allowed.
 6. **Manual entries — what matters is the duration per project.** The form
-   needs project, date and duration (`h:mm`); start and end times are
-   optional and come last. Without a start time the entry is *untimed*: it
+   needs project, date and duration in whole minutes (`15`, `120`); note,
+   start and end are optional and come last. Project defaults to the running
+   timer's, else the latest entry's; date defaults to the shown day; the cursor
+   starts in the first empty required field (usually Minutes) and Enter saves.
+   Required fields are large and bold, optional ones small. Without a start time the entry is *untimed*: it
    counts fully toward its date and project, shows no time range, and is never
    checked for overlaps. With a start time it is timed as before: either an
    end time or a duration; an end time earlier than the start means the next
@@ -121,8 +124,9 @@ Single page, four tabs. Follows system light/dark mode.
   appears at the top with a live duration and can't be deleted (stop it
   first).
 - Totals: today overall and per project.
-- "+ Add entry" opens the entry form (project, date, duration, note, then
-  optional start and end). The same form is used for editing. Time ranges in
+- "+ Add entry" opens the entry form (project, date, minutes, then optional
+  note, start and end). Adding 15 minutes to the current project is: click
+  "+ Add entry", type `15`, press Enter. The same form is used for editing. Time ranges in
   the list are shown smaller than project and duration; untimed entries have
   none.
 

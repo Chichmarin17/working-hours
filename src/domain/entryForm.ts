@@ -1,5 +1,5 @@
 import type { EntryDraft } from './entries';
-import { addDays, dayKey, formatHM, localDateTime, parseHM, timeOfDay, toMs } from './time';
+import { addDays, dayKey, localDateTime, MINUTE, parseMinutes, timeOfDay, toMs } from './time';
 import type { Entry, Result } from './types';
 import { err, ok } from './types';
 
@@ -8,7 +8,7 @@ export type EntryFormValues = {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM, optional: empty means a duration-only entry
   endTime: string; // HH:MM, optional; with a start time it wins over duration
-  duration: string; // h:mm
+  duration: string; // whole minutes, e.g. "15"
   note: string;
 };
 
@@ -16,9 +16,9 @@ export function draftFromForm(values: EntryFormValues): Result<EntryDraft> {
   if (localDateTime(values.date, '00:00') === null) return err('Enter a valid date.');
   if (!values.startTime.trim()) {
     if (values.endTime.trim()) return err('Enter a start time too, or leave both times empty.');
-    if (!values.duration.trim()) return err('Enter a duration (h:mm).');
-    const duration = parseHM(values.duration);
-    if (!duration) return err('Enter the duration as h:mm, e.g. 1:30.');
+    if (!values.duration.trim()) return err('Enter the duration in minutes.');
+    const duration = parseMinutes(values.duration);
+    if (!duration) return err('Enter the duration in minutes, e.g. 15.');
     const midnight = localDateTime(values.date, '00:00')!;
     return ok({ projectId: values.projectId, start: midnight, end: midnight + duration, note: values.note, untimed: true });
   }
@@ -32,8 +32,8 @@ export function draftFromForm(values: EntryFormValues): Result<EntryDraft> {
     if (sameDay === null) return err('Enter a valid end time (HH:MM).');
     end = sameDay < start ? addDays(sameDay, 1) : sameDay;
   } else if (values.duration.trim()) {
-    const duration = parseHM(values.duration);
-    if (!duration) return err('Enter the duration as h:mm, e.g. 1:30.');
+    const duration = parseMinutes(values.duration);
+    if (!duration) return err('Enter the duration in minutes, e.g. 15.');
     end = start + duration;
   } else {
     return err('Enter an end time or a duration.');
@@ -45,7 +45,7 @@ export function draftFromForm(values: EntryFormValues): Result<EntryDraft> {
 export function formFromEntry(entry: Entry): EntryFormValues {
   const start = toMs(entry.start);
   if (entry.untimed && entry.end !== null) {
-    const duration = formatHM(toMs(entry.end) - start);
+    const duration = String(Math.round((toMs(entry.end) - start) / MINUTE));
     return { projectId: entry.projectId, date: dayKey(start), startTime: '', endTime: '', duration, note: entry.note ?? '' };
   }
   return {
