@@ -9,7 +9,7 @@ import {
   localDateTime,
   MINUTE,
   overlapMs,
-  parseHM,
+  parseMinutes,
   startOfDay,
   startOfWeek,
   timeOfDay,
@@ -45,15 +45,15 @@ describe('formatEntryDuration', () => {
   });
 });
 
-describe('parseHM', () => {
-  it('parses h:mm', () => {
-    expect(parseHM('1:30')).toBe(90 * MINUTE);
-    expect(parseHM(' 0:45 ')).toBe(45 * MINUTE);
+describe('parseMinutes', () => {
+  it('parses a whole number of minutes', () => {
+    expect(parseMinutes('15')).toBe(15 * MINUTE);
+    expect(parseMinutes(' 120 ')).toBe(120 * MINUTE);
   });
 
-  it('rejects other formats', () => {
-    for (const text of ['', '90', '1:5', '1:60', 'a:bc', '-1:00']) {
-      expect(parseHM(text)).toBeNull();
+  it('rejects anything else', () => {
+    for (const text of ['', '0', '1:30', '1.5', '-5', 'abc', '15m']) {
+      expect(parseMinutes(text)).toBeNull();
     }
   });
 });

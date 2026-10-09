@@ -32,40 +32,40 @@ describe('draftFromForm', () => {
   });
 
   it('uses the duration when no end time is given', () => {
-    const result = draftFromForm({ ...base, duration: '1:15' });
+    const result = draftFromForm({ ...base, duration: '75' });
     expect(result.ok && result.value.end).toBe(at(2026, 10, 8, 10, 15));
   });
 
   it('prefers the end time over the duration', () => {
-    const result = draftFromForm({ ...base, endTime: '10:00', duration: '5:00' });
+    const result = draftFromForm({ ...base, endTime: '10:00', duration: '300' });
     expect(result.ok && result.value.end).toBe(at(2026, 10, 8, 10));
   });
 
   it('a duration without times gives an untimed entry starting at local midnight', () => {
-    expect(draftFromForm({ ...base, startTime: '', duration: '1:30' })).toEqual({
+    expect(draftFromForm({ ...base, startTime: '', duration: '90' })).toEqual({
       ok: true,
       value: { projectId: 'p1', start: at(2026, 10, 8), end: at(2026, 10, 8, 1, 30), note: 'n', untimed: true },
     });
   });
 
   it('rejects an end time without a start time', () => {
-    expect(draftFromForm({ ...base, startTime: '', endTime: '10:00', duration: '1:00' })).toEqual({
+    expect(draftFromForm({ ...base, startTime: '', endTime: '10:00', duration: '60' })).toEqual({
       ok: false,
       error: 'Enter a start time too, or leave both times empty.',
     });
   });
 
   it('reports missing or invalid values', () => {
-    expect(draftFromForm({ ...base, startTime: '' })).toEqual({ ok: false, error: 'Enter a duration (h:mm).' });
-    expect(draftFromForm({ ...base, date: '', duration: '1:00' })).toEqual({ ok: false, error: 'Enter a valid date.' });
+    expect(draftFromForm({ ...base, startTime: '' })).toEqual({ ok: false, error: 'Enter the duration in minutes.' });
+    expect(draftFromForm({ ...base, date: '', duration: '60' })).toEqual({ ok: false, error: 'Enter a valid date.' });
     expect(draftFromForm(base)).toEqual({ ok: false, error: 'Enter an end time or a duration.' });
-    expect(draftFromForm({ ...base, duration: '90' })).toEqual({
+    expect(draftFromForm({ ...base, duration: '1:30' })).toEqual({
       ok: false,
-      error: 'Enter the duration as h:mm, e.g. 1:30.',
+      error: 'Enter the duration in minutes, e.g. 15.',
     });
-    expect(draftFromForm({ ...base, duration: '0:00' })).toEqual({
+    expect(draftFromForm({ ...base, duration: '0' })).toEqual({
       ok: false,
-      error: 'Enter the duration as h:mm, e.g. 1:30.',
+      error: 'Enter the duration in minutes, e.g. 15.',
     });
   });
 });
@@ -107,7 +107,7 @@ describe('formFromEntry for an untimed entry', () => {
       source: 'manual',
     };
     const values = formFromEntry(entry);
-    expect(values).toEqual({ projectId: 'p1', date: '2026-10-08', startTime: '', endTime: '', duration: '2:15', note: '' });
+    expect(values).toEqual({ projectId: 'p1', date: '2026-10-08', startTime: '', endTime: '', duration: '135', note: '' });
     expect(draftFromForm(values)).toEqual({
       ok: true,
       value: { projectId: 'p1', start: at(2026, 10, 8), end: at(2026, 10, 8, 2, 15), note: '', untimed: true },

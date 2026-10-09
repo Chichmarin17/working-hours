@@ -1,4 +1,4 @@
-import type { Project, Result } from './types';
+import type { Entry, Project, Result } from './types';
 import { err, ok } from './types';
 
 export const PALETTE = ['#4f7cff', '#22a06b', '#e5484d', '#f5a524', '#8e4ec6', '#12a5b8', '#e54d9a', '#6b7280'];
@@ -7,6 +7,17 @@ const MAX_NAME_LENGTH = 40;
 
 export function activeProjects(projects: Project[]): Project[] {
   return projects.filter((p) => !p.archived);
+}
+
+/** The project a new entry most likely belongs to: the running timer's, else the latest entry's, else the first active one. */
+export function currentProjectId(projects: Project[], entries: Entry[]): string {
+  const active = new Set(activeProjects(projects).map((p) => p.id));
+  const running = entries.find((e) => e.end === null && active.has(e.projectId));
+  if (running) return running.projectId;
+  const latest = entries
+    .filter((e) => active.has(e.projectId))
+    .reduce<Entry | undefined>((best, e) => (!best || Date.parse(e.start) > Date.parse(best.start) ? e : best), undefined);
+  return latest?.projectId ?? activeProjects(projects)[0]?.id ?? '';
 }
 
 function nameError(projects: Project[], name: string, exceptId?: string): string | null {

@@ -24,11 +24,12 @@ export function formatHMS(ms: number): string {
   return `${h}:${pad(m)}:${pad(totalSeconds % 60)}`;
 }
 
-/** Parses "h:mm" into milliseconds; anything else returns null. */
-export function parseHM(text: string): number | null {
-  const match = /^(\d{1,2}):([0-5]\d)$/.exec(text.trim());
+/** Parses a whole number of minutes ("15", "120") into milliseconds; anything else returns null. */
+export function parseMinutes(text: string): number | null {
+  const match = /^\d{1,4}$/.exec(text.trim());
   if (!match) return null;
-  return Number(match[1]) * HOUR + Number(match[2]) * MINUTE;
+  const minutes = Number(match[0]);
+  return minutes > 0 ? minutes * MINUTE : null;
 }
 
 export function startOfDay(ms: number): number {
