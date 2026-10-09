@@ -125,8 +125,11 @@ Single page, four tabs. Follows system light/dark mode.
   first).
 - Totals: today overall and per project.
 - "+ Add entry" opens the entry form (project, date, minutes, then optional
-  note, start and end). Adding 15 minutes to the current project is: click
-  "+ Add entry", type `15`, press Enter. The same form is used for editing. Time ranges in
+  note, start and end). Adding 15 minutes to the current project is: press
+  `A` (or click "+ Add entry (A)"), type `15`, press Enter. `A` works from any
+  tab (it switches to Today), is matched by key position so it works on any
+  keyboard layout, and is ignored while typing in a field, with Cmd/Ctrl/Alt
+  held, or while the away dialog is open. Escape closes the form. The same form is used for editing. Time ranges in
   the list are shown smaller than project and duration; untimed entries have
   none.
 

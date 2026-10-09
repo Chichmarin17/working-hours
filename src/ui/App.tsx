@@ -6,6 +6,7 @@ import { AwayDialog } from './AwayDialog';
 import { newId } from './newId';
 import { ProjectsView } from './ProjectsView';
 import { SettingsView } from './SettingsView';
+import { isAddEntryShortcut } from './shortcuts';
 import { TodayView } from './TodayView';
 import { useAppData } from './useAppData';
 import { useHeartbeat } from './useHeartbeat';
@@ -26,6 +27,7 @@ export function App() {
   const { data, update } = store;
   const now = useNow();
   const [tab, setTab] = useState<Tab>('today');
+  const [addRequested, setAddRequested] = useState(false);
 
   useHeartbeat(update);
   useIdleDetector(
@@ -43,6 +45,20 @@ export function App() {
 
   const pending = data.pendingAway;
   const pendingEntry = pending ? data.entries.find((e) => e.id === pending.entryId) : undefined;
+
+  // "A" anywhere (outside a field) jumps to Today and opens Add entry.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const { code, metaKey, ctrlKey, altKey, repeat } = event;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (!isAddEntryShortcut({ code, metaKey, ctrlKey, altKey, repeat, target }, pending !== null)) return;
+      event.preventDefault();
+      setTab('today');
+      setAddRequested(true);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [pending]);
 
   return (
     <div className="app">
@@ -71,7 +87,15 @@ export function App() {
         </div>
       )}
       <main>
-        {tab === 'today' && <TodayView store={store} now={now} onGoToProjects={() => setTab('projects')} />}
+        {tab === 'today' && (
+          <TodayView
+            store={store}
+            now={now}
+            onGoToProjects={() => setTab('projects')}
+            addRequested={addRequested}
+            onAddOpened={() => setAddRequested(false)}
+          />
+        )}
         {tab === 'week' && <WeekView store={store} now={now} />}
         {tab === 'projects' && <ProjectsView store={store} now={now} />}
         {tab === 'settings' && <SettingsView store={store} />}

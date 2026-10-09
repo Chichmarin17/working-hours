@@ -34,7 +34,14 @@ export function EntryForm({ title, projects, initial, onSubmit, onCancel }: Prop
   };
 
   return (
-    <form className="panel" onSubmit={submit} aria-label={title}>
+    <form
+      className="panel"
+      onSubmit={submit}
+      aria-label={title}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCancel();
+      }}
+    >
       <h2>{title}</h2>
       <div className="form-grid">
         <label className="field-main">
